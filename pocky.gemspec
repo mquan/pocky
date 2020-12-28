@@ -19,11 +19,11 @@ Gem::Specification.new do |spec|
   spec.metadata["source_code_uri"] = "https://github.com/mquan/pocky"
   spec.metadata["changelog_uri"] = "https://github.com/mquan/pocky"
 
-  spec.bindir        = "exe"
-  spec.executables   = "pocky"
   spec.files = Dir.chdir(__dir__) do
     %x(git ls-files -z).split("\x0").reject { |f| f.match(%r{^(test|spec|features|static)/}) }
   end
+  spec.bindir        = "exe"
+  spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = %w(lib)
 
   spec.add_dependency "ruby-graphviz", "~> 1"
