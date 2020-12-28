@@ -14,12 +14,12 @@ module Pocky
       root_path:,
       default_package: 'Default',
       package_prefix: '',
-      image_filename: 'pocky-graph.png'
+      output_filename: 'pocky-graph.png'
     )
       @root_path = root_path
       @default_package = default_package
       @package_prefix = package_prefix
-      @output_filename = image_filename
+      @output_filename = output_filename
 
       @deprecated_references = {}
       @nodes = {}
@@ -48,7 +48,7 @@ module Pocky
         end
       end
 
-      graph.output(png: )
+      graph.output(png: @output_filename)
     end
 
     def edge_width(count)
