@@ -5,6 +5,8 @@ require 'ruby-graphviz'
 
 module Pocky
   class Graph
+    MAX_EDGE_WIDTH = 5
+
     def self.generate(params)
       new(**params).generate
     end
@@ -41,8 +43,8 @@ module Pocky
           @nodes[provider_package] ||= graph.add_nodes(provider_package)
 
           graph.add_edges(
-            @nodes[package],
             @nodes[provider_package],
+            @nodes[package],
             penwidth: edge_width(dependencies.length)
           )
         end
@@ -54,7 +56,7 @@ module Pocky
     def edge_width(count)
       [
         [(count / 5).to_i, 1].max,
-        5
+        MAX_EDGE_WIDTH
       ].min
     end
 
