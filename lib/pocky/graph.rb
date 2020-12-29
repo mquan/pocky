@@ -58,7 +58,7 @@ module Pocky
       ].min
     end
 
-    def load_dependencies
+    def load_package_dependencies
       Dir.each_child(@root_path) do |elem|
         if Dir.exist?(File.join(@root_path, elem))
           load_deprecated_references_for_package(elem)
