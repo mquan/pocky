@@ -15,6 +15,9 @@ Pocky::Graph.generate(
 )
 ```
 
+![pocky-graph](https://user-images.githubusercontent.com/138784/103251690-a6299b80-492e-11eb-92f1-205752d850d8.png)
+
+Note that the the wider edges indicate more references.
 
 ## Installation
 
