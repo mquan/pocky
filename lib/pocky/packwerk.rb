@@ -22,8 +22,8 @@ module Pocky
       @root_path = root_path
       @default_package = default_package
       @package_prefix = package_prefix
-      @output_filename = output_filename
-      @output_dpi = output_dpi.to_i
+      @filename = filename
+      @dpi = dpi.to_i
       @deprecated_references = {}
       @nodes = {}
     end
@@ -36,7 +36,7 @@ module Pocky
     private
 
     def build_directed_graph
-      graph = GraphViz.new(:G, type: :digraph, dpi: @output_dpi)
+      graph = GraphViz.new(:G, type: :digraph, dpi: @dpi)
       @deprecated_references.each do |package, references|
         @nodes[package] ||= graph.add_nodes(package)
         references.each do |provider, dependencies|
@@ -51,7 +51,7 @@ module Pocky
         end
       end
 
-      graph.output(png: @output_filename)
+      graph.output(png: @filename)
     end
 
     def edge_width(count)
