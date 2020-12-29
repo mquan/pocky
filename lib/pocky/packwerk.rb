@@ -4,7 +4,7 @@ require 'yaml'
 require 'ruby-graphviz'
 
 module Pocky
-  class Graph
+  class Packwerk
     MAX_EDGE_WIDTH = 5
 
     def self.generate(params)
@@ -16,13 +16,14 @@ module Pocky
       root_path:,
       default_package: 'Default',
       package_prefix: '',
-      output_filename: 'pocky-graph.png'
+      output_filename: 'pocky-graph.png',
+      output_dpi: 150
     )
       @root_path = root_path
       @default_package = default_package
       @package_prefix = package_prefix
       @output_filename = output_filename
-
+      @output_dpi = output_dpi
       @deprecated_references = {}
       @nodes = {}
     end
@@ -35,7 +36,7 @@ module Pocky
     private
 
     def build_directed_graph
-      graph = GraphViz.new(:G, type: :digraph, dpi: 300)
+      graph = GraphViz.new(:G, type: :digraph, dpi: @output_dpi)
       @deprecated_references.each do |package, references|
         @nodes[package] ||= graph.add_nodes(package)
         references.each do |provider, dependencies|

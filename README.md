@@ -7,11 +7,12 @@ Pocky generates dependency graphs for your packwerk packages. The gem is named a
 ## Usage
 
 ```ruby
-Pocky::Graph.generate(
+Pocky::Packwerk.generate(
   root_path: 'path/to/app/packages',
-  default_package: 'The Monolith', # The default package listed as "." in deprecated_references.yml
-  package_prefix: 'app/packages', # this is for matching package names listed in deprecated_references.yml
-  output_filename: 'pocky-graph.png'
+  default_package: 'Default',    # The default package listed as "." in deprecated_references.yml
+  package_prefix: 'app/packages',     # this is for matching package names listed in deprecated_references.yml
+  output_filename: 'pocky-graph.png', # Name of output file
+  output_dpi: 150                     # Output file resolution
 )
 ```
 
