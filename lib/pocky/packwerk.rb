@@ -16,14 +16,14 @@ module Pocky
       root_path:,
       default_package: 'Default',
       package_prefix: '',
-      output_filename: 'pocky-graph.png',
-      output_dpi: 150
+      filename: 'packwerk-viz.png',
+      dpi: 150
     )
       @root_path = root_path
       @default_package = default_package
       @package_prefix = package_prefix
       @output_filename = output_filename
-      @output_dpi = output_dpi
+      @output_dpi = output_dpi.to_i
       @deprecated_references = {}
       @nodes = {}
     end

@@ -6,19 +6,26 @@ Pocky generates dependency graphs for your packwerk packages. The gem is named a
 
 ## Usage
 
+Invoke from irb or code
 ```ruby
 Pocky::Packwerk.generate(
   root_path: 'path/to/app/packages',
   default_package: 'Default',    # The default package listed as "." in deprecated_references.yml
   package_prefix: 'app/packages',     # this is for matching package names listed in deprecated_references.yml
-  output_filename: 'pocky-graph.png', # Name of output file
-  output_dpi: 150                     # Output file resolution
+  filename: 'packwerk-viz.png', # Name of output file
+  dpi: 150                     # Output file resolution
 )
 ```
 
 ![pocky-graph](https://user-images.githubusercontent.com/138784/103251690-a6299b80-492e-11eb-92f1-205752d850d8.png)
 
-Note that the the wider edges indicate more references.
+Note that the the bold edges indicate heavier dependencies.
+
+Invoke as a rake task
+
+```
+rake pocky:generate[path/to/app/packages,Default,app/packages,packwerk-viz.png,150]
+```
 
 ## Installation
 
