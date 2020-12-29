@@ -1,6 +1,6 @@
 # Pocky
 
-Pocky is used to generate dependency graphs for your packwerk packages. The gem is named after pocky, a beloved Japanese snack that comes in small packages.
+Pocky generates dependency graphs for your packwerk packages. The gem is named after pocky, a beloved Japanese snack that comes in small packages.
 
 ![Pocky](https://user-images.githubusercontent.com/138784/103248942-c141de80-4921-11eb-99bd-3744816abc37.png)
 
