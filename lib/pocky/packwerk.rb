@@ -4,7 +4,11 @@ require 'yaml'
 require 'ruby-graphviz'
 
 module Pocky
+  class InvalidRootPathError < StandardError
+  end
+
   class Packwerk
+    REFERENCE_FILE_NAME = 'deprecated_references.yml'
     MAX_EDGE_WIDTH = 5
 
     def self.generate(params)
@@ -15,13 +19,13 @@ module Pocky
     def initialize(
       root_path:,
       default_package: 'Default',
-      package_prefix: '',
       filename: 'packwerk-viz.png',
       dpi: 150
     )
-      @root_path = root_path
+      @root_paths = [*root_path]
+      raise InvalidRootPathError, 'root_path is required' if @root_paths.empty?
+
       @default_package = default_package
-      @package_prefix = package_prefix
       @filename = filename
       @dpi = dpi.to_i
       @deprecated_references = {}
@@ -29,7 +33,7 @@ module Pocky
     end
 
     def generate
-      load_package_dependencies
+      load_package_references
       build_directed_graph
     end
 
@@ -61,33 +65,35 @@ module Pocky
       ].min
     end
 
-    def load_package_dependencies
-      Dir.each_child(@root_path) do |elem|
-        if Dir.exist?(File.join(@root_path, elem))
-          load_deprecated_references_for_package(elem)
-        end
+    def package_references
+      @package_references ||= @root_paths.flat_map do |path|
+        Dir["#{path}/**/#{REFERENCE_FILE_NAME}"]
       end
     end
 
-    def load_deprecated_references_for_package(package)
-      @deprecated_references[package] ||= begin
-        filename = deprecated_references_file_for(package)
-        if File.exist?(filename)
-          YAML.load_file(filename) || {}
-        else
-          {}
-        end
+    def load_package_references
+      if package_references.empty?
+        raise InvalidRootPathError, "Cannot find any #{REFERENCE_FILE_NAME} in provided root_path"
+      end
+
+      package_references.each do |filename|
+        package = parse_package_name(filename)
+        @deprecated_references[package] ||= YAML.load_file(filename) || {}
       end
     end
 
-    def deprecated_references_file_for(package)
-      File.join(@root_path, package, 'deprecated_references.yml')
+    def parse_package_name(filename)
+      File.basename(File.dirname(filename))
     end
 
     def package_name_for_dependency(name)
       return @default_package if name == '.'
 
-      name.gsub(@package_prefix, '').gsub(/^\//, '')
+      reference_filename = package_references.find do |ref|
+        ref.match(/#{name}\/#{REFERENCE_FILE_NAME}$/)
+      end
+
+      parse_package_name(reference_filename)
     end
   end
 end

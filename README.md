@@ -6,12 +6,11 @@ Pocky generates dependency graphs for your packwerk packages. The gem is named a
 
 ## Usage
 
-Invoke from irb or code
+Invoke from irb or code, only `root_path` is required.
 ```ruby
 Pocky::Packwerk.generate(
   root_path: 'path/to/app/packages',
   default_package: 'Default',    # The default package listed as "." in deprecated_references.yml
-  package_prefix: 'app/packages',     # this is for matching package names listed in deprecated_references.yml
   filename: 'packwerk-viz.png', # Name of output file
   dpi: 150                     # Output file resolution
 )
@@ -21,11 +20,27 @@ Pocky::Packwerk.generate(
 
 Note that the the bold edges indicate heavier dependencies.
 
-Invoke as a rake task
+Invoke as a rake task:
 
+    $ rake pocky:generate"[path/to/app/packages,Monolith,packages.png,100]"
+
+
+#### `root_path` as an array
+`root_path` can also be an array in case your packages are organized in multiple directories. Alternatively, you can also provide paths to individual packages to generate more focused graphs for your package subsystems.
+
+```ruby
+Pocky::Packwerk.generate(
+  root_path: [
+    'path/to/app/packages/a',
+    'path/to/app/packages/z',
+  ]
+)
 ```
-rake pocky:generate[path/to/app/packages,Default,app/packages,packwerk-viz.png,150]
-```
+
+Generate the same graph using the rake task:
+
+    $ rake pocky:generate"[path/to/app/packages/a path/to/app/packages/z]"
+
 
 ## Installation
 
@@ -51,7 +66,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/pocky.
+Bug reports and pull requests are welcome on GitHub at https://github.com/mquan/pocky.
 
 ## License
 
