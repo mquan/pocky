@@ -93,7 +93,11 @@ module Pocky
         ref.match(/#{name}\/#{REFERENCE_FILE_NAME}$/)
       end
 
-      parse_package_name(reference_filename)
+      if reference_filename
+        parse_package_name(reference_filename)
+      else
+        name
+      end
     end
   end
 end
