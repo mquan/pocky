@@ -48,8 +48,8 @@ module Pocky
           @nodes[provider_package] ||= graph.add_nodes(provider_package)
 
           graph.add_edges(
-            @nodes[provider_package],
             @nodes[package],
+            @nodes[provider_package],
             penwidth: edge_width(dependencies.length)
           )
         end
