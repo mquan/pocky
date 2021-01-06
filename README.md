@@ -10,9 +10,12 @@ Invoke from irb or code, only `root_path` is required.
 ```ruby
 Pocky::Packwerk.generate(
   root_path: 'path/to/app/packages',
-  default_package: 'Default',   # The default package listed as "." in deprecated_references.yml
+  default_package: 'app',       # The default package listed as "." in package.yml and deprecated_references.yml
   filename: 'packwerk-viz.png', # Name of output file
-  dpi: 150                      # Output file resolution
+  dpi: 100,                     # Output file resolution
+  package_color: 'darkgray',   # color name or hex color, see https://graphviz.org/doc/info/colors.html for more details
+  deprecated_reference_edge: 'black',
+  dependency_edge: 'darkgreen',
 )
 ```
 
