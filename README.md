@@ -16,6 +16,9 @@ Invoke as a rake task:
     $ rake pocky:generate
 
 
+![packwerk](https://user-images.githubusercontent.com/138784/104111683-df043180-5299-11eb-9a37-8db6851062e0.png)
+
+
 #### Generate with custom options
 ```ruby
 Pocky::Packwerk.generate(
@@ -28,8 +31,6 @@ Pocky::Packwerk.generate(
   dependency_edge: 'darkgreen',
 )
 ```
-
-![pocky-graph](https://user-images.githubusercontent.com/138784/103251690-a6299b80-492e-11eb-92f1-205752d850d8.png)
 
 Note that the the bold edges indicate heavier dependencies.
 
