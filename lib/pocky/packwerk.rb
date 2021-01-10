@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'pathname'
 require 'yaml'
 require 'ruby-graphviz'
 
@@ -18,16 +19,16 @@ module Pocky
 
     private_class_method :new
     def initialize(
-      root_path:,
+      package_path: nil,
       default_package: 'app',
       filename: 'packwerk-viz.png',
       dpi: 100,
-      package_color: 'darkgray',
+      package_color: '#5CC8FF',
       dependency_edge: 'green3',
-      deprecated_reference_edge: 'black'
+      deprecated_reference_edge: '#343633'
     )
-      @root_paths = [*root_path]
-      raise InvalidRootPathError, 'root_path is required' if @root_paths.empty?
+      @package_paths = [*package_path] if package_path
+      @root_path = defined?(Rails) ? Rails.root : Pathname.new(Dir.pwd)
 
       @default_package = default_package
       @filename = filename
@@ -41,6 +42,7 @@ module Pocky
         fontcolor: 'white',
         fillcolor: package_color,
         color: package_color,
+        height: 1.0,
         style: 'filled, rounded',
         shape: 'box',
       }
@@ -109,14 +111,22 @@ module Pocky
     end
 
     def deprecated_references_files
-      @deprecated_references_files ||= @root_paths.flat_map do |path|
-        Dir["#{path}/**/#{DEPRECATED_REFERENCES_FILENAME}"]
+      @deprecated_references_files ||= begin
+        return Dir[@root_path.join('**', DEPRECATED_REFERENCES_FILENAME).to_s] unless @package_paths
+
+        @package_paths.flat_map do |path|
+          Dir[@root_path.join(path, '**', DEPRECATED_REFERENCES_FILENAME).to_s]
+        end
       end
     end
 
     def dependencies_files
-      @dependencies_files ||= @root_paths.flat_map do |path|
-        Dir["#{path}/**/#{DEPENDENCIES_FILENAME}"]
+      @dependencies_files ||= begin
+        return Dir[@root_path.join('**', DEPENDENCIES_FILENAME).to_s] unless @package_paths
+
+        @package_paths.flat_map do |path|
+          Dir[@root_path.join(path, '**', DEPENDENCIES_FILENAME).to_s]
+        end
       end
     end
 
@@ -142,21 +152,12 @@ module Pocky
     end
 
     def parse_package_name(filename)
-      File.basename(File.dirname(filename))
+      name = File.dirname(filename).gsub(@root_path.to_s, '')
+      name == '' ? @default_package : name.gsub(/^\//, '')
     end
 
     def package_name_for_dependency(name)
-      return @default_package if name == '.'
-
-      reference_filename = deprecated_references_files.find do |ref|
-        ref.match(/#{name}\/#{DEPRECATED_REFERENCES_FILENAME}$/)
-      end
-
-      if reference_filename
-        parse_package_name(reference_filename)
-      else
-        name
-      end
+      name == '.' ? @default_package : name
     end
   end
 end
