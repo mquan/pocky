@@ -21,11 +21,11 @@ module Pocky
     def initialize(
       package_path: nil,
       default_package: 'app',
-      filename: 'packwerk-viz.png',
+      filename: 'packwerk.png',
       dpi: 100,
       package_color: '#5CC8FF',
-      dependency_edge: 'green3',
-      deprecated_reference_edge: '#343633'
+      dependency_edge: 'darkgreen',
+      deprecated_reference_edge: 'black'
     )
       @package_paths = [*package_path] if package_path
       @root_path = defined?(Rails) ? Rails.root : Pathname.new(Dir.pwd)

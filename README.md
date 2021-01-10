@@ -2,18 +2,28 @@
 
 Pocky generates dependency graphs for your packwerk packages. The gem is named after pocky, a beloved Japanese snack that comes in small packages.
 
-![Pocky](https://user-images.githubusercontent.com/138784/103248942-c141de80-4921-11eb-99bd-3744816abc37.png)
 
 ## Usage
 
-Invoke from irb or code, only `root_path` is required.
+Invoke from irb or code.
+
+```ruby
+Pocky::Packwerk.generate
+```
+
+Invoke as a rake task:
+
+    $ rake pocky:generate
+
+
+#### Generate with custom options
 ```ruby
 Pocky::Packwerk.generate(
-  root_path: 'path/to/app/packages',
+  package_path: 'app/packages', # Relative path to packages directory
   default_package: 'app',       # The default package listed as "." in package.yml and deprecated_references.yml
-  filename: 'packwerk-viz.png', # Name of output file
+  filename: 'packwerk.png',     # Name of output file
   dpi: 100,                     # Output file resolution
-  package_color: 'darkgray',   # color name or hex color, see https://graphviz.org/doc/info/colors.html for more details
+  package_color: '#5CC8FF',   # color name or hex color, see https://graphviz.org/doc/info/colors.html for more details
   deprecated_reference_edge: 'black',
   dependency_edge: 'darkgreen',
 )
@@ -25,7 +35,7 @@ Note that the the bold edges indicate heavier dependencies.
 
 Invoke as a rake task:
 
-    $ rake pocky:generate"[path/to/app/packages,Monolith,packages.png,100]"
+    $ rake pocky:generate"[app/packages,Monolith,packages.png,100]"
 
 
 #### `root_path` as an array
@@ -33,16 +43,16 @@ Invoke as a rake task:
 
 ```ruby
 Pocky::Packwerk.generate(
-  root_path: [
-    'path/to/app/packages/a',
-    'path/to/app/packages/z',
+  package_path: [
+    'app/packages/a',
+    'app/packages/z',
   ]
 )
 ```
 
 Generate the same graph using the rake task:
 
-    $ rake pocky:generate"[path/to/app/packages/a path/to/app/packages/z]"
+    $ rake pocky:generate"[app/packages/a app/packages/z]"
 
 
 ## Installation
