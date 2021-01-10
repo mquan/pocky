@@ -39,8 +39,8 @@ Invoke as a rake task:
     $ rake pocky:generate"[app/packages,Monolith,packages.png,100]"
 
 
-#### `root_path` as an array
-`root_path` can also be an array in case your packages are organized in multiple directories. Alternatively, you can also provide paths to individual packages to generate more focused graphs for your package subsystems.
+#### `package_path` as an array
+`package_path` can also be an array in case your packages are organized in multiple directories. Alternatively, you can also provide paths to individual packages to generate more focused graphs for your package subsystems.
 
 ```ruby
 Pocky::Packwerk.generate(
