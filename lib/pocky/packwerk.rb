@@ -25,7 +25,8 @@ module Pocky
       dpi: 100,
       package_color: '#5CC8FF',
       dependency_edge: 'darkgreen',
-      deprecated_reference_edge: 'black'
+      deprecated_reference_edge: 'black',
+      deprecated_reference_ranking: true
     )
       @package_paths = [*package_path] if package_path
       @root_path = defined?(Rails) ? Rails.root : Pathname.new(Dir.pwd)
@@ -46,14 +47,14 @@ module Pocky
         style: 'filled, rounded',
         shape: 'box',
       }
+      @dependency_edge_options = {
+        color: dependency_edge
+      }
 
       @deprecated_references_edge_options = {
         color: deprecated_reference_edge,
       }
-
-      @dependency_edge_options = {
-        color: dependency_edge
-      }
+      @deprecated_references_edge_options.merge!(constraint: false) unless deprecated_reference_ranking
     end
 
     def generate
@@ -99,7 +100,6 @@ module Pocky
             @nodes[provider_package],
             **@deprecated_references_edge_options.merge(
               penwidth: edge_width(invocations.length),
-              constraint: false,
             ),
           )
         end

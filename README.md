@@ -26,9 +26,10 @@ Pocky::Packwerk.generate(
   default_package: 'app',       # The default package listed as "." in package.yml and deprecated_references.yml
   filename: 'packwerk.png',     # Name of output file
   dpi: 100,                     # Output file resolution
-  package_color: '#5CC8FF',   # color name or hex color, see https://graphviz.org/doc/info/colors.html for more details
-  deprecated_reference_edge: 'black',
+  package_color: '#5CC8FF',     # color name or hex color, see https://graphviz.org/doc/info/colors.html for more details
   dependency_edge: 'darkgreen',
+  deprecated_reference_edge: 'black',
+  deprecated_reference_ranking: true, # Set ranking for deprecated references. Set to false to organize nodes on the same vertical level.
 )
 ```
 
