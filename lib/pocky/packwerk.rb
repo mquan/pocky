@@ -97,7 +97,10 @@ module Pocky
           @graph.add_edges(
             @nodes[package],
             @nodes[provider_package],
-            **@deprecated_references_edge_options.merge(penwidth: edge_width(invocations.length)),
+            **@deprecated_references_edge_options.merge(
+              penwidth: edge_width(invocations.length),
+              constraint: false,
+            ),
           )
         end
       end
