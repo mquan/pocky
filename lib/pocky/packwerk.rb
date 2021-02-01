@@ -8,19 +8,32 @@ module Pocky
   class InvalidRootPathError < StandardError
   end
 
+  class RubyFileSize
+    def self.compute(directory)
+      # Sum up all ruby source except for specs
+      package_size = Dir[File.join(directory, '**', '*.rb').to_s].reduce(0) do |size, filename|
+        size += File.size(filename) unless filename.match(/spec\.rb$/)
+        size
+      end
+
+      # to kB
+      (package_size / 1024).ceil
+    end
+  end
+
   class Packwerk
     DEPENDENCIES_FILENAME = 'package.yml'
     DEPRECATED_REFERENCES_FILENAME = 'deprecated_references.yml'
     MAX_EDGE_WIDTH = 5
 
-    def self.generate(params)
+    def self.generate(params = {})
       new(**params).generate
     end
 
     private_class_method :new
     def initialize(
       package_path: nil,
-      default_package: 'app',
+      default_package: 'root',
       filename: 'packwerk.png',
       dpi: 100,
       package_color: '#5CC8FF',
@@ -45,8 +58,9 @@ module Pocky
         color: package_color,
         height: 1.0,
         style: 'filled, rounded',
-        shape: 'box',
+        shape: 'box'
       }
+
       @dependency_edge_options = {
         color: dependency_edge
       }
@@ -65,6 +79,27 @@ module Pocky
 
     private
 
+    def node_overrides(file_size)
+      if file_size < 10
+        { fontsize: 26 }
+      elsif file_size < 100
+        { fontsize: 26 * 4, margin: 0.2 }
+      elsif file_size < 1000
+        { fontsize: 26 * 8, margin: 0.4 }
+      elsif file_size < 10_000
+        { fontsize: 26 * 16, margin: 0.8 }
+      else
+        { fontsize: 26 * 32, margin: 1.0 }
+      end
+    end
+
+    def draw_node(package)
+      package_name = package_name_for_dependency(package)
+      path = package == '.' ? @root_path : @root_path.join(package)
+      file_size = RubyFileSize.compute(path.to_s)
+      @graph.add_nodes(package_name, **@node_options.merge(node_overrides(file_size)))
+    end
+
     def build_directed_graph
       @graph = GraphViz.new(:G, type: :digraph, dpi: @dpi)
       draw_dependencies
@@ -74,14 +109,13 @@ module Pocky
 
     def draw_dependencies
       @package_dependencies.each do |package, file|
-        @nodes[package] ||= @graph.add_nodes(package, **@node_options)
+        @nodes[package] ||= draw_node(package)
         file.each do |provider|
-          provider_package = package_name_for_dependency(provider)
-          @nodes[provider_package] ||= @graph.add_nodes(provider_package, **@node_options)
+          @nodes[provider] ||= draw_node(provider)
 
           @graph.add_edges(
             @nodes[package],
-            @nodes[provider_package],
+            @nodes[provider],
             **@dependency_edge_options
           )
         end
@@ -90,14 +124,13 @@ module Pocky
 
     def draw_deprecated_references
       @deprecated_references.each do |package, references|
-        @nodes[package] ||= @graph.add_nodes(package, **@node_options)
+        @nodes[package] ||= draw_node(package)
         references.each do |provider, invocations|
-          provider_package = package_name_for_dependency(provider)
-          @nodes[provider_package] ||= @graph.add_nodes(provider_package, **@node_options)
+          @nodes[provider] ||= draw_node(provider)
 
           @graph.add_edges(
             @nodes[package],
-            @nodes[provider_package],
+            @nodes[provider],
             **@deprecated_references_edge_options.merge(
               penwidth: edge_width(invocations.length),
             ),
