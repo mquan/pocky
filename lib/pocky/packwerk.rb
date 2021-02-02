@@ -35,6 +35,7 @@ module Pocky
       package_path: nil,
       default_package: 'root',
       filename: 'packwerk.png',
+      analyze_sizes: false,
       dpi: 100,
       package_color: '#5CC8FF',
       dependency_edge: 'darkgreen',
@@ -46,6 +47,8 @@ module Pocky
 
       @default_package = default_package
       @filename = filename
+      @analyze_sizes = analyze_sizes
+
       @dpi = dpi.to_i
       @deprecated_references = {}
       @package_dependencies = {}
@@ -96,7 +99,7 @@ module Pocky
     def draw_node(package)
       package_name = package_name_for_dependency(package)
       path = package == '.' ? @root_path : @root_path.join(package)
-      file_size = RubyFileSize.compute(path.to_s)
+      file_size = @analyze_sizes ? RubyFileSize.compute(path.to_s) : 1
       @graph.add_nodes(package_name, **@node_options.merge(node_overrides(file_size)))
     end
 
