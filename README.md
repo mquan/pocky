@@ -23,8 +23,9 @@ Invoke as a rake task:
 ```ruby
 Pocky::Packwerk.generate(
   package_path: 'app/packages', # Relative path to packages directory
-  default_package: 'app',       # The default package listed as "." in package.yml and deprecated_references.yml
+  default_package: 'root',       # The default package listed as "." in package.yml and deprecated_references.yml
   filename: 'packwerk.png',     # Name of output file
+  analyze_sizes: false,         # Calculate and display package according to the size of ruby source code
   dpi: 100,                     # Output file resolution
   package_color: '#5CC8FF',     # color name or hex color, see https://graphviz.org/doc/info/colors.html for more details
   dependency_edge: 'darkgreen',
