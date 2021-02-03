@@ -4,9 +4,6 @@ require 'pathname'
 require 'ruby-graphviz'
 
 module Pocky
-  class InvalidRootPathError < StandardError
-  end
-
   class Packwerk
     DEPENDENCIES_FILENAME = 'package.yml'
     DEPRECATED_REFERENCES_FILENAME = 'deprecated_references.yml'
