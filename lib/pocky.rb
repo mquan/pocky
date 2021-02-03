@@ -2,6 +2,7 @@
 
 require_relative 'pocky/version'
 require_relative 'pocky/ruby_file_size'
+require_relative 'pocky/package'
 require_relative 'pocky/packwerk'
 
 module Pocky
