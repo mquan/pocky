@@ -59,6 +59,7 @@ module Pocky
     def generate
       load_dependencies
       load_deprecated_references
+      load_uninitialized_dependencies
       build_directed_graph
     end
 
@@ -174,6 +175,22 @@ module Pocky
         # Walk the references to create referenced packages
         @packages[package_name].deprecated_references.each do |provider_name, _violations|
           @packages[provider_name] ||= Pocky::Package.new(name: provider_name)
+        end
+      end
+    end
+
+    # This must be run as the very last step of packages graph building because these won't have
+    # dependency filename reference.
+    def load_uninitialized_dependencies
+      return if dependencies_files.empty?
+
+      # When analyzing partial system, some packages may not be initialized as part of
+      # dependencies/deprecated references walk. So we take care of initializing them here
+      # before drawing.
+      dependencies_files.each do |filename|
+        package_name = parse_package_name(filename)
+        @packages[package_name].dependencies.each do |dependency|
+          @packages[dependency] ||= Pocky::Package.new(name: dependency)
         end
       end
     end
