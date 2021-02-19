@@ -28,6 +28,7 @@ Pocky::Packwerk.generate(
   analyze_sizes: false,         # Calculate and display package according to the size of ruby source code
   dpi: 100,                     # Output file resolution
   package_color: '#5CC8FF',     # color name or hex color, see https://graphviz.org/doc/info/colors.html for more details
+  secondary_package_color: '#AAAAAA', # secondary package color when visualizing partial system.
   dependency_edge: 'darkgreen',
   deprecated_reference_edge: 'black',
   deprecated_reference_ranking: true, # Set ranking for deprecated references. Set to false to organize nodes on the same vertical level.
