@@ -21,6 +21,7 @@ module Pocky
       analyze_sizes: false,
       dpi: 100,
       package_color: '#5CC8FF',
+      secondary_package_color: '#AAAAAA',
       dependency_edge: 'darkgreen',
       deprecated_reference_edge: 'black',
       deprecated_reference_ranking: true
@@ -32,6 +33,7 @@ module Pocky
       @filename = filename
       @analyze_sizes = analyze_sizes
       @dpi = dpi.to_i
+      @secondary_package_color = secondary_package_color
 
       @packages = {}
       @nodes = {}
@@ -85,13 +87,16 @@ module Pocky
       file_size = @analyze_sizes ? RubyFileSize.compute(path.to_s) : 1
       node_label = "#{package_name}#{' (Þ)' if package.enforce_privacy}"
 
-      @graph.add_nodes(
-        package_name,
-        **@node_options.merge(
-          **node_overrides(file_size),
-          label: node_label
-        )
+      node_styles = @node_options.merge(
+        **node_overrides(file_size),
+        label: node_label
       )
+
+      if @package_paths.present? && @package_paths.exclude?(package.name)
+        node_styles.merge!(fillcolor: @secondary_package_color)
+      end
+
+      @graph.add_nodes(package_name, **node_styles)
     end
 
     def build_directed_graph
