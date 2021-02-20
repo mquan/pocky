@@ -166,15 +166,11 @@ module Pocky
     end
 
     def init_package(package_name, primary)
-      package_yml = @root_path.join(package_name, Pocky::Package::DEPENDENCIES_FILENAME).to_s
-      references_yml = @root_path.join(package_name, Pocky::Package::DEPRECATED_REFERENCES_FILENAME).to_s
-      package = Pocky::Package.new(
+      Pocky::Package.new(
         name: package_name,
-        filename: package_yml,
+        path: @root_path.join(package_name).to_s,
         primary: primary
       )
-      package.add_deprecated_references(references_yml) if File.file?(references_yml)
-      package
     end
 
     def load_primary_packages

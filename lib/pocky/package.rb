@@ -7,32 +7,40 @@ module Pocky
     DEPENDENCIES_FILENAME = 'package.yml'
     DEPRECATED_REFERENCES_FILENAME = 'deprecated_references.yml'
 
-    attr_reader :name, :dependencies, :enforce_privacy, :deprecated_references, :primary
+    attr_reader :name, :dependencies, :enforce_privacy, :primary
 
-    # TODO: take the path and this class automatically figure out the ymls inside the package
-    def initialize(name:, primary:, filename: nil)
+    def initialize(name:, path:, primary:)
       @name = name
-      @filename = filename
+      @path = path
       @primary = primary
-      @dependencies = yml['dependencies'] || []
-      @enforce_privacy = yml['enforce_privacy'] || false
-      @deprecated_references = {}
+      @dependencies = dependencies_yml['dependencies'] || []
+      @enforce_privacy = dependencies_yml['enforce_privacy'] || false
     end
 
-    def add_deprecated_references(reference_filename)
-      @deprecated_references = YAML.load_file(reference_filename) || {}
+    def deprecated_references
+      @deprecated_references ||= load_yml(deprecated_references_filename)
     end
 
     private
 
-    def yml
-      @yml ||= begin
-        if @filename
-          YAML.load_file(@filename) || {}
-        else
-          {}
-        end
+    def load_yml(filename)
+      if File.file?(filename)
+        YAML.load_file(filename) || {}
+      else
+        {}
       end
+    end
+
+    def dependencies_yml
+      @dependencies_yml ||= load_yml(dependecies_filename)
+    end
+
+    def dependecies_filename
+      File.join(@path, DEPENDENCIES_FILENAME)
+    end
+
+    def deprecated_references_filename
+      File.join(@path, DEPRECATED_REFERENCES_FILENAME)
     end
   end
 end
