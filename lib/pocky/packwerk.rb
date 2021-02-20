@@ -5,8 +5,6 @@ require 'ruby-graphviz'
 
 module Pocky
   class Packwerk
-    DEPENDENCIES_FILENAME = 'package.yml'
-    DEPRECATED_REFERENCES_FILENAME = 'deprecated_references.yml'
     MAX_EDGE_WIDTH = 5
 
     def self.generate(params = {})
@@ -59,9 +57,8 @@ module Pocky
     end
 
     def generate
-      load_dependencies
-      load_deprecated_references
-      load_uninitialized_dependencies
+      load_primary_packages
+      load_secondary_packages
       build_directed_graph
     end
 
@@ -92,7 +89,7 @@ module Pocky
         label: node_label
       )
 
-      if @package_paths.present? && @package_paths.exclude?(package.name)
+      if @package_paths.present? && !package.primary
         node_styles.merge!(fillcolor: @secondary_package_color)
       end
 
@@ -110,6 +107,10 @@ module Pocky
         @nodes[package.name] ||= draw_node(package)
 
         package.dependencies.each do |dependency|
+          # Do not draw dependencies of secondary packages (depencies of primary packages)
+          # when visualizing partial system
+          next if !package.primary && !@packages[dependency]
+
           @nodes[dependency] ||= draw_node(@packages[dependency])
 
           @graph.add_edges(
@@ -120,6 +121,10 @@ module Pocky
         end
 
         package.deprecated_references.each do |provider_name, invocations|
+          # Do not draw deprecatd dependencies of secondary packages (depencies of primary packages)
+          # when visualizing partial system
+          next if !package.primary && !@packages[provider_name]
+
           @nodes[provider_name] ||= draw_node(@packages[provider_name])
 
           @graph.add_edges(
@@ -142,62 +147,57 @@ module Pocky
 
     def deprecated_references_files
       @deprecated_references_files ||= begin
-        return Dir[@root_path.join('**', DEPRECATED_REFERENCES_FILENAME).to_s] unless @package_paths
+        return Dir[@root_path.join('**', Pocky::Package::DEPRECATED_REFERENCES_FILENAME).to_s] unless @package_paths
 
         @package_paths.flat_map do |path|
-          Dir[@root_path.join(path, '**', DEPRECATED_REFERENCES_FILENAME).to_s]
+          Dir[@root_path.join(path, '**', Pocky::Package::DEPRECATED_REFERENCES_FILENAME).to_s]
         end
       end
     end
 
     def dependencies_files
       @dependencies_files ||= begin
-        return Dir[@root_path.join('**', DEPENDENCIES_FILENAME).to_s] unless @package_paths
+        return Dir[@root_path.join('**', Pocky::Package::DEPENDENCIES_FILENAME).to_s] unless @package_paths
 
         @package_paths.flat_map do |path|
-          Dir[@root_path.join(path, '**', DEPENDENCIES_FILENAME).to_s]
+          Dir[@root_path.join(path, '**', Pocky::Package::DEPENDENCIES_FILENAME).to_s]
         end
       end
     end
 
-    def load_dependencies
-      return if dependencies_files.empty?
+    def init_package(package_name, primary)
+      package_yml = @root_path.join(package_name, Pocky::Package::DEPENDENCIES_FILENAME).to_s
+      references_yml = @root_path.join(package_name, Pocky::Package::DEPRECATED_REFERENCES_FILENAME).to_s
+      package = Pocky::Package.new(
+        name: package_name,
+        filename: package_yml,
+        primary: primary
+      )
+      package.add_deprecated_references(references_yml) if File.file?(references_yml)
+      package
+    end
 
-      dependencies_files.each do |filename|
-        package_name = parse_package_name(filename)
-        @packages[package_name] ||= Pocky::Package.new(name: package_name, filename: filename)
+    def load_primary_packages
+      filenames = dependencies_files + deprecated_references_files
+      primary_package_names = filenames.map { |filename| parse_package_name(filename) }.uniq
+      primary_package_names.each do |name|
+        @packages[name] ||= init_package(name, true)
       end
     end
 
-    def load_deprecated_references
-      return if deprecated_references_files.empty?
+    def load_secondary_packages
+      secondary_packages = {}
+      @packages.each do |_, package|
+        package.dependencies.each do |dependency|
+          secondary_packages[dependency] ||= init_package(dependency, false) unless @packages[dependency]
+        end
 
-      deprecated_references_files.each do |filename|
-        package_name = parse_package_name(filename)
-        @packages[package_name] ||= Pocky::Package.new(name: package_name)
-        @packages[package_name].add_deprecated_references(filename)
-
-        # Walk the references to create referenced packages
-        @packages[package_name].deprecated_references.each do |provider_name, _violations|
-          @packages[provider_name] ||= Pocky::Package.new(name: provider_name)
+        package.deprecated_references.each do |reference, _violations|
+          secondary_packages[reference] ||= init_package(reference, false) unless @packages[reference]
         end
       end
-    end
 
-    # This must be run as the very last step of packages graph building because these won't have
-    # dependency filename reference.
-    def load_uninitialized_dependencies
-      return if dependencies_files.empty?
-
-      # When analyzing partial system, some packages may not be initialized as part of
-      # dependencies/deprecated references walk. So we take care of initializing them here
-      # before drawing.
-      dependencies_files.each do |filename|
-        package_name = parse_package_name(filename)
-        @packages[package_name].dependencies.each do |dependency|
-          @packages[dependency] ||= Pocky::Package.new(name: dependency)
-        end
-      end
+      @packages.merge!(secondary_packages)
     end
 
     def parse_package_name(filename)

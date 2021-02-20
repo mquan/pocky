@@ -4,11 +4,16 @@ require 'yaml'
 
 module Pocky
   class Package
-    attr_reader :name, :dependencies, :enforce_privacy, :deprecated_references
+    DEPENDENCIES_FILENAME = 'package.yml'
+    DEPRECATED_REFERENCES_FILENAME = 'deprecated_references.yml'
 
-    def initialize(name:, filename: nil)
+    attr_reader :name, :dependencies, :enforce_privacy, :deprecated_references, :primary
+
+    # TODO: take the path and this class automatically figure out the ymls inside the package
+    def initialize(name:, primary:, filename: nil)
       @name = name
       @filename = filename
+      @primary = primary
       @dependencies = yml['dependencies'] || []
       @enforce_privacy = yml['enforce_privacy'] || false
       @deprecated_references = {}
