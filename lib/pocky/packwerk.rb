@@ -33,7 +33,6 @@ module Pocky
       @dpi = dpi.to_i
       @secondary_package_color = secondary_package_color
 
-      @packages = {}
       @nodes = {}
 
       @node_options = {
@@ -57,12 +56,16 @@ module Pocky
     end
 
     def generate
-      load_primary_packages
-      load_secondary_packages
-      build_directed_graph
+      @graph = GraphViz.new(:G, type: :digraph, dpi: @dpi)
+      draw_packages
+      @graph.output(png: @filename)
     end
 
     private
+
+    def packages
+      @packages ||= PackwerkLoader.load(@root_path, @package_paths)
+    end
 
     def node_overrides(file_size)
       if file_size < 10
@@ -78,6 +81,20 @@ module Pocky
       end
     end
 
+    def draw_packages
+      packages.each do |_name, package|
+        @nodes[package.name] ||= draw_node(package)
+
+        package.dependencies.each do |dependency|
+          draw_dependency(package, dependency)
+        end
+
+        package.deprecated_references.each do |provider_name, invocations|
+          draw_dependency(package, provider_name, invocations)
+        end
+      end
+    end
+
     def draw_node(package)
       package_name = package_name_for_dependency(package.name)
       path = package.name == '.' ? @root_path : @root_path.join(package.name)
@@ -90,52 +107,33 @@ module Pocky
       )
 
       if @package_paths.present? && !package.primary
-        node_styles.merge!(fillcolor: @secondary_package_color)
+        node_styles.merge!(
+          fillcolor: @secondary_package_color,
+          color: @secondary_package_color
+        )
       end
 
       @graph.add_nodes(package_name, **node_styles)
     end
 
-    def build_directed_graph
-      @graph = GraphViz.new(:G, type: :digraph, dpi: @dpi)
-      draw_packages
-      @graph.output(png: @filename)
-    end
+    def draw_dependency(package, dependency, invocations = nil)
+      # Do not draw dependencies of secondary packages (depencies of primary packages)
+      # when visualizing partial system
+      return if !package.primary && !packages[dependency]
 
-    def draw_packages
-      @packages.each do |_name, package|
-        @nodes[package.name] ||= draw_node(package)
+      @nodes[dependency] ||= draw_node(packages[dependency])
 
-        package.dependencies.each do |dependency|
-          # Do not draw dependencies of secondary packages (depencies of primary packages)
-          # when visualizing partial system
-          next if !package.primary && !@packages[dependency]
+      edge_options = invocations ?
+        @deprecated_references_edge_options.merge(
+          penwidth: edge_width(invocations.length),
+        ) :
+        @dependency_edge_options
 
-          @nodes[dependency] ||= draw_node(@packages[dependency])
-
-          @graph.add_edges(
-            @nodes[package.name],
-            @nodes[dependency],
-            **@dependency_edge_options
-          )
-        end
-
-        package.deprecated_references.each do |provider_name, invocations|
-          # Do not draw deprecatd dependencies of secondary packages (depencies of primary packages)
-          # when visualizing partial system
-          next if !package.primary && !@packages[provider_name]
-
-          @nodes[provider_name] ||= draw_node(@packages[provider_name])
-
-          @graph.add_edges(
-            @nodes[package.name],
-            @nodes[provider_name],
-            **@deprecated_references_edge_options.merge(
-              penwidth: edge_width(invocations.length),
-            ),
-          )
-        end
-      end
+      @graph.add_edges(
+        @nodes[package.name],
+        @nodes[dependency],
+        **edge_options
+      )
     end
 
     def edge_width(count)
@@ -143,62 +141,6 @@ module Pocky
         [(count / 5).to_i, 1].max,
         MAX_EDGE_WIDTH
       ].min
-    end
-
-    def deprecated_references_files
-      @deprecated_references_files ||= begin
-        return Dir[@root_path.join('**', Pocky::Package::DEPRECATED_REFERENCES_FILENAME).to_s] unless @package_paths
-
-        @package_paths.flat_map do |path|
-          Dir[@root_path.join(path, '**', Pocky::Package::DEPRECATED_REFERENCES_FILENAME).to_s]
-        end
-      end
-    end
-
-    def dependencies_files
-      @dependencies_files ||= begin
-        return Dir[@root_path.join('**', Pocky::Package::DEPENDENCIES_FILENAME).to_s] unless @package_paths
-
-        @package_paths.flat_map do |path|
-          Dir[@root_path.join(path, '**', Pocky::Package::DEPENDENCIES_FILENAME).to_s]
-        end
-      end
-    end
-
-    def init_package(package_name, primary)
-      Pocky::Package.new(
-        name: package_name,
-        path: @root_path.join(package_name).to_s,
-        primary: primary
-      )
-    end
-
-    def load_primary_packages
-      filenames = dependencies_files + deprecated_references_files
-      primary_package_names = filenames.map { |filename| parse_package_name(filename) }.uniq
-      primary_package_names.each do |name|
-        @packages[name] ||= init_package(name, true)
-      end
-    end
-
-    def load_secondary_packages
-      secondary_packages = {}
-      @packages.each do |_, package|
-        package.dependencies.each do |dependency|
-          secondary_packages[dependency] ||= init_package(dependency, false) unless @packages[dependency]
-        end
-
-        package.deprecated_references.each do |reference, _violations|
-          secondary_packages[reference] ||= init_package(reference, false) unless @packages[reference]
-        end
-      end
-
-      @packages.merge!(secondary_packages)
-    end
-
-    def parse_package_name(filename)
-      name = File.dirname(filename).gsub(@root_path.to_s, '')
-      name == '' ? '.' : name.gsub(/^\//, '')
     end
 
     def package_name_for_dependency(name)
