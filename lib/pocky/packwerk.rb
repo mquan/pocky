@@ -119,7 +119,7 @@ module Pocky
     def draw_dependency(package, dependency, invocations = nil)
       # Do not draw dependencies of secondary packages (depencies of primary packages)
       # when visualizing partial system
-      return if !package.primary && !packages[dependency]
+      return if !package.primary && !packages[dependency]&.primary
 
       @nodes[dependency] ||= draw_node(packages[dependency])
 
